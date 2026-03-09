@@ -17,7 +17,13 @@ interface CapturingGroup {
   child: Expression;
 }
 
-export type Token = Repeatable | Word | CapturingGroup;
+interface Union {
+  type: "union";
+  left: Token;
+  right: Token;
+}
+
+export type Token = Repeatable | Word | CapturingGroup | Union;
 
 export type Expression = Token[];
 
@@ -28,18 +34,16 @@ export class Parser {
     this.lexer = lexer;
   }
 
-  parse(until?: string) {
+  parse() {
+    return this.parseTokenList();
+  }
+
+  parseTokenList(until?: string) {
     const expression: Expression = [];
 
     let el: IteratorResult<LexerToken>;
 
-    while ((el = this.lexer.next()).done === false) {
-      const { value: token } = el;
-
-      // if (until && until === token.value) {
-      //   return;
-      // }
-
+    const parseToken = (token: LexerToken) => {
       if (/\w/.test(token.value)) {
         expression.push({
           type: "word",
@@ -60,20 +64,31 @@ export class Parser {
       } else if (token.value === "(") {
         expression.push({
           type: "capturing-group",
-          child: new Parser(this.lexer).parse(")"),
+          child: this.parseTokenList(")"),
         });
-      } else if (token.value === ")") {
-        if (until === token.value) {
-          return expression;
-        } else {
-          throw new Error(
-            "Invalid character at position " +
-              token.position +
-              ", expected " +
-              until
-          );
+      } else if (token.value === "|") {
+        const next = this.lexer.next();
+
+        if (next.done) {
+          throw new Error("Unexpected end of string");
         }
+
+        expression[expression.length - 1] = {
+          type: "union",
+          left: expression[expression.length - 1],
+          right: (parseToken(next.value), expression.pop()),
+        };
       }
+    };
+
+    while ((el = this.lexer.next()).done === false) {
+      const { value: token } = el;
+
+      if (token.value === until) {
+        return expression;
+      }
+
+      parseToken(token);
     }
 
     if (until) {

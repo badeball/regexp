@@ -50,4 +50,19 @@ describe("Lexer", () => {
       position: 3,
     },
   ]);
+
+  example("a|b", [
+    {
+      value: "a",
+      position: 0,
+    },
+    {
+      value: "|",
+      position: 1,
+    },
+    {
+      value: "b",
+      position: 2,
+    },
+  ]);
 });

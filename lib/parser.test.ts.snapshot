@@ -40,3 +40,19 @@ exports[`Parser > input 'ab+c' 1`] = `
   }
 ]
 `;
+
+exports[`Parser > input 'a|b' 1`] = `
+[
+  {
+    "type": "union",
+    "left": {
+      "type": "word",
+      "character": "a"
+    },
+    "right": {
+      "type": "word",
+      "character": "b"
+    }
+  }
+]
+`;

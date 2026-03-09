@@ -31,5 +31,7 @@ describe("API", () => {
     };
 
     example("a(b)c", "abc");
+    example("a|b", "a");
+    example("a|b", "b");
   });
 });

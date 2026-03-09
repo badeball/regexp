@@ -1,4 +1,5 @@
 import { inspect } from "node:util";
+
 import type { Expression } from "../parser/index.ts";
 
 export class Evaluator {
@@ -60,6 +61,20 @@ export class Evaluator {
         } else {
           captured.push(...match);
           position += match.length;
+        }
+      } else if (node.type === "union") {
+        let match = new Evaluator([node.left]).evaluate(input.slice(position));
+
+        if (match) {
+          position += match.length;
+        } else {
+          match = new Evaluator([node.right]).evaluate(input.slice(position));
+
+          if (match) {
+            position += match.length;
+          } else {
+            return null;
+          }
         }
       }
     }

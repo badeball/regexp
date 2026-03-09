@@ -1,4 +1,7 @@
-const lexer = new RegExp(["\\w", "\\+", "\\*", "\\(", "\\)"].join("|"), "g");
+const lexer = new RegExp(
+  ["\\w", "\\+", "\\*", "\\(", "\\)", "\\|"].join("|"),
+  "g"
+);
 
 export interface Token {
   value: string;
