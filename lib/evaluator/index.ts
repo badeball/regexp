@@ -8,8 +8,10 @@ export class Evaluator {
     this.expression = expression;
   }
 
-  evaluate(input: string): string | null {
+  evaluate(input: string): string[] | null {
     let position = 0;
+
+    const captured: string[] = [];
 
     // console.log(inspect(this.expression));
 
@@ -22,7 +24,7 @@ export class Evaluator {
         }
       } else if (node.type === "repeatable") {
         if (node.repeat === "none-or-more") {
-          let match: string;
+          let match: string[];
 
           while (
             (match = new Evaluator([node.child]).evaluate(
@@ -50,9 +52,18 @@ export class Evaluator {
             position += match.length;
           }
         }
+      } else if (node.type === "capturing-group") {
+        let match = new Evaluator(node.child).evaluate(input.slice(position));
+
+        if (match === null) {
+          return null;
+        } else {
+          captured.push(...match);
+          position += match.length;
+        }
       }
     }
 
-    return input.slice(0, position);
+    return [input.slice(0, position), ...captured];
   }
 }

@@ -20,4 +20,16 @@ describe("API", () => {
     example("ab+c", "abc");
     example("ab+c", "abbc");
   });
+
+  describe("RegExp.exec()", () => {
+    const example = (expr: string, input: string) => {
+      test(`expression ${inspect(expr)} with ${inspect(input)}`, () => {
+        const expected = new globalThis.RegExp(expr).exec(input);
+        const actual = new RegExp(expr).exec(input);
+        deepEqual(actual, expected);
+      });
+    };
+
+    example("a(b)c", "abc");
+  });
 });

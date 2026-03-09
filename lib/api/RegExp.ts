@@ -17,4 +17,28 @@ export class RegExp {
 
     return evaluator.evaluate(input) !== null;
   }
+
+  public exec(input: string) {
+    for (let i = this.lastIndex; i < input.length; i++) {
+      const lexer = new Lexer(this.expression);
+      const parser = new Parser(lexer[Symbol.iterator]());
+      const evaluator = new Evaluator(parser.parse());
+
+      const match = evaluator.evaluate(input.slice(i));
+
+      if (match !== null) {
+        this.lastIndex = i + match[0].length;
+
+        return Object.assign(match, {
+          input,
+          index: i,
+          groups: undefined,
+        });
+      }
+    }
+
+    this.lastIndex = 0;
+
+    return null;
+  }
 }
