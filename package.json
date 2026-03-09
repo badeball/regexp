@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@types/node": "^25.3.5",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,20 @@
+exports[`Parser > input 'ab+c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "repeatable",
+    "repeat": "one-or-more",
+    "child": {
+      "type": "word",
+      "character": "b"
+    }
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
