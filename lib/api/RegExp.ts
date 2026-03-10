@@ -27,13 +27,22 @@ export class RegExp {
       const match = evaluator.evaluate(input.slice(i));
 
       if (match !== null) {
-        this.lastIndex = i + match[0].length;
+        this.lastIndex = i + match.match.length;
 
-        return Object.assign(match, {
-          input,
-          index: i,
-          groups: undefined,
-        });
+        // return Object.assign(match, {
+        //   input,
+        //   index: i,
+        //   groups: undefined,
+        // });
+
+        return Object.assign(
+          [match.match, ...match.groups.map((group) => group.match)],
+          {
+            input,
+            index: i,
+            groups: undefined,
+          }
+        );
       }
     }
 

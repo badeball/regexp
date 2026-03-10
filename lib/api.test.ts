@@ -19,6 +19,7 @@ describe("API", () => {
     example("ab*c", "abbc");
     example("ab+c", "abc");
     example("ab+c", "abbc");
+    example("ab+b", "abb");
     example("a(?:b)c", "abc");
   });
 
@@ -35,5 +36,7 @@ describe("API", () => {
     example("a(?:b)c", "abc");
     example("a|b", "a");
     example("a|b", "b");
+    example("a*a", "a");
+    example("a*a", "aa");
   });
 });
