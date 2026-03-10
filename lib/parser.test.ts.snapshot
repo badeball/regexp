@@ -1,3 +1,25 @@
+exports[`Parser > input 'a(?:b)c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "non-capturing-group",
+    "child": [
+      {
+        "type": "word",
+        "character": "b"
+      }
+    ]
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
 exports[`Parser > input 'a(b)c' 1`] = `
 [
   {

@@ -11,6 +11,12 @@ interface Word {
   character: string;
 }
 
+interface NonCapturingGroup {
+  type: "non-capturing-group";
+  name?: string;
+  child: Expression;
+}
+
 interface CapturingGroup {
   type: "capturing-group";
   name?: string;
@@ -23,7 +29,12 @@ interface Union {
   right: Token;
 }
 
-export type Token = Repeatable | Word | CapturingGroup | Union;
+export type Token =
+  | Repeatable
+  | Word
+  | NonCapturingGroup
+  | CapturingGroup
+  | Union;
 
 export type Expression = Token[];
 
@@ -61,6 +72,11 @@ export class Parser {
           repeat: "one-or-more",
           child: expression[expression.length - 1],
         };
+      } else if (token.value === "(?:") {
+        expression.push({
+          type: "non-capturing-group",
+          child: this.parseTokenList(")"),
+        });
       } else if (token.value === "(") {
         expression.push({
           type: "capturing-group",
@@ -78,6 +94,8 @@ export class Parser {
           left: expression[expression.length - 1],
           right: (parseToken(next.value), expression.pop()),
         };
+      } else {
+        throw new Error("Urecognized token " + token.value);
       }
     };
 

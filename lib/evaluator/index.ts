@@ -53,6 +53,14 @@ export class Evaluator {
             position += match.length;
           }
         }
+      } else if (node.type === "non-capturing-group") {
+        let match = new Evaluator(node.child).evaluate(input.slice(position));
+
+        if (match === null) {
+          return null;
+        } else {
+          position += match.length;
+        }
       } else if (node.type === "capturing-group") {
         let match = new Evaluator(node.child).evaluate(input.slice(position));
 
@@ -76,6 +84,8 @@ export class Evaluator {
             return null;
           }
         }
+      } else {
+        throw new Error("Unrecognized token type: " + node.type);
       }
     }
 

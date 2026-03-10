@@ -19,6 +19,7 @@ describe("API", () => {
     example("ab*c", "abbc");
     example("ab+c", "abc");
     example("ab+c", "abbc");
+    example("a(?:b)c", "abc");
   });
 
   describe("RegExp.exec()", () => {
@@ -31,6 +32,7 @@ describe("API", () => {
     };
 
     example("a(b)c", "abc");
+    example("a(?:b)c", "abc");
     example("a|b", "a");
     example("a|b", "b");
   });

@@ -14,5 +14,6 @@ describe("Parser", () => {
 
   example("ab+c");
   example("a(b)c");
+  example("a(?:b)c");
   example("a|b");
 });
