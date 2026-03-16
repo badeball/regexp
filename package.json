@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:update-snapshots": "node --test --test-update-snapshots"
+  },
   "dependencies": {
     "@types/node": "^25.3.5",
     "prettier": "^3.8.1",

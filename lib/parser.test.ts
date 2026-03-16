@@ -12,8 +12,16 @@ describe("Parser", () => {
     });
   };
 
+  example("ab?c");
+  example("ab*c");
   example("ab+c");
+  example("ab{1}c");
+  example("ab{1,}c");
+  example("ab{,2}c");
+  example("ab{1,2}c");
+  example("ab{0,1}c");
   example("a(b)c");
   example("a(?:b)c");
+  example("a(?:b|c)c");
   example("a|b");
 });

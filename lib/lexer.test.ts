@@ -51,6 +51,41 @@ describe("Lexer", () => {
     },
   ]);
 
+  example("ab{0,1}c", [
+    {
+      value: "a",
+      position: 0,
+    },
+    {
+      value: "b",
+      position: 1,
+    },
+    {
+      value: "{",
+      position: 2,
+    },
+    {
+      value: "0",
+      position: 3,
+    },
+    {
+      value: ",",
+      position: 4,
+    },
+    {
+      value: "1",
+      position: 5,
+    },
+    {
+      value: "}",
+      position: 6,
+    },
+    {
+      value: "c",
+      position: 7,
+    },
+  ]);
+
   example("a|b", [
     {
       value: "a",

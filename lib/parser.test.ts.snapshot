@@ -20,6 +20,35 @@ exports[`Parser > input 'a(?:b)c' 1`] = `
 ]
 `;
 
+exports[`Parser > input 'a(?:b|c)c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "non-capturing-group",
+    "child": [
+      {
+        "type": "union",
+        "left": {
+          "type": "word",
+          "character": "b"
+        },
+        "right": {
+          "type": "word",
+          "character": "c"
+        }
+      }
+    ]
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
 exports[`Parser > input 'a(b)c' 1`] = `
 [
   {
@@ -42,6 +71,27 @@ exports[`Parser > input 'a(b)c' 1`] = `
 ]
 `;
 
+exports[`Parser > input 'ab*c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "none-or-more",
+    "child": {
+      "type": "word",
+      "character": "b"
+    }
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
 exports[`Parser > input 'ab+c' 1`] = `
 [
   {
@@ -49,12 +99,148 @@ exports[`Parser > input 'ab+c' 1`] = `
     "character": "a"
   },
   {
-    "type": "repeatable",
+    "type": "quantifier",
     "repeat": "one-or-more",
     "child": {
       "type": "word",
       "character": "b"
     }
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab?c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "none-or-one",
+    "child": {
+      "type": "word",
+      "character": "b"
+    }
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab{,2}c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "exact",
+    "child": {
+      "type": "word",
+      "character": "b"
+    },
+    "min": null,
+    "max": 2
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab{0,1}c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "exact",
+    "child": {
+      "type": "word",
+      "character": "b"
+    },
+    "min": 0,
+    "max": 1
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab{1,2}c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "exact",
+    "child": {
+      "type": "word",
+      "character": "b"
+    },
+    "min": 1,
+    "max": 2
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab{1,}c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "exact",
+    "child": {
+      "type": "word",
+      "character": "b"
+    },
+    "min": 1,
+    "max": null
+  },
+  {
+    "type": "word",
+    "character": "c"
+  }
+]
+`;
+
+exports[`Parser > input 'ab{1}c' 1`] = `
+[
+  {
+    "type": "word",
+    "character": "a"
+  },
+  {
+    "type": "quantifier",
+    "repeat": "exact",
+    "child": {
+      "type": "word",
+      "character": "b"
+    },
+    "min": 1,
+    "max": 1
   },
   {
     "type": "word",

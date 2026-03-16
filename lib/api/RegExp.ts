@@ -26,6 +26,8 @@ export class RegExp {
 
       const match = evaluator.evaluate(input.slice(i));
 
+      // console.log("Exec match", match);
+
       if (match !== null) {
         this.lastIndex = i + match.match.length;
 

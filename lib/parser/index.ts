@@ -1,10 +1,20 @@
 import type { Token as LexerToken } from "../lexer/index.ts";
 
-interface Repeatable {
-  type: "repeatable";
-  repeat: "none-or-more" | "one-or-more";
+interface CommonQuantifiers {
+  type: "quantifier";
+  repeat: "none-or-one" | "none-or-more" | "one-or-more";
   child: Token;
 }
+
+interface ExactQuantifiers {
+  type: "quantifier";
+  repeat: "exact";
+  child: Token;
+  min?: number;
+  max?: number;
+}
+
+type Quantifiers = CommonQuantifiers | ExactQuantifiers;
 
 interface Word {
   type: "word";
@@ -30,13 +40,21 @@ interface Union {
 }
 
 export type Token =
-  | Repeatable
+  | Quantifiers
   | Word
   | NonCapturingGroup
   | CapturingGroup
   | Union;
 
 export type Expression = Token[];
+
+const expectToken = (maybe: IteratorResult<LexerToken>): LexerToken => {
+  if (maybe.done) {
+    throw new Error("Unexpected end of string");
+  }
+
+  return maybe.value;
+};
 
 export class Parser {
   private lexer: Iterator<LexerToken>;
@@ -60,18 +78,94 @@ export class Parser {
           type: "word",
           character: token.value,
         });
+      } else if (token.value === "?") {
+        expression[expression.length - 1] = {
+          type: "quantifier",
+          repeat: "none-or-one",
+          child: expression[expression.length - 1],
+        };
       } else if (token.value === "*") {
         expression[expression.length - 1] = {
-          type: "repeatable",
+          type: "quantifier",
           repeat: "none-or-more",
           child: expression[expression.length - 1],
         };
       } else if (token.value === "+") {
         expression[expression.length - 1] = {
-          type: "repeatable",
+          type: "quantifier",
           repeat: "one-or-more",
           child: expression[expression.length - 1],
         };
+      } else if (token.value === "{") {
+        let next = expectToken(this.lexer.next());
+
+        if (next.value === ",") {
+          const max = expectToken(this.lexer.next());
+
+          if (/\d+/.test(max.value)) {
+            expression[expression.length - 1] = {
+              type: "quantifier",
+              repeat: "exact",
+              child: expression[expression.length - 1],
+              min: null,
+              max: parseInt(max.value, 10),
+            };
+
+            next = expectToken(this.lexer.next());
+
+            if (next.value !== "}") {
+              throw new Error("Unexpected token " + token.value);
+            }
+          } else {
+            throw new Error("Unexpected token " + max.value);
+          }
+        } else if (/\d+/.test(next.value)) {
+          const min = parseInt(next.value, 10);
+
+          next = expectToken(this.lexer.next());
+
+          if (next.value === "}") {
+            expression[expression.length - 1] = {
+              type: "quantifier",
+              repeat: "exact",
+              child: expression[expression.length - 1],
+              min,
+              max: min,
+            };
+          } else if (next.value === ",") {
+            next = expectToken(this.lexer.next());
+
+            if (next.value === "}") {
+              expression[expression.length - 1] = {
+                type: "quantifier",
+                repeat: "exact",
+                child: expression[expression.length - 1],
+                min,
+                max: null,
+              };
+            } else if (/\d+/.test(next.value)) {
+              expression[expression.length - 1] = {
+                type: "quantifier",
+                repeat: "exact",
+                child: expression[expression.length - 1],
+                min,
+                max: parseInt(next.value, 10),
+              };
+
+              next = expectToken(this.lexer.next());
+
+              if (next.value !== "}") {
+                throw new Error("Unexpected token " + token.value);
+              }
+            } else {
+              throw new Error("Unexpected token " + token.value);
+            }
+          } else {
+            throw new Error("Unexpected token " + token.value);
+          }
+        } else {
+          throw new Error("Unexpected token " + token.value);
+        }
       } else if (token.value === "(?:") {
         expression.push({
           type: "non-capturing-group",
@@ -83,16 +177,12 @@ export class Parser {
           child: this.parseTokenList(")"),
         });
       } else if (token.value === "|") {
-        const next = this.lexer.next();
-
-        if (next.done) {
-          throw new Error("Unexpected end of string");
-        }
+        const next = expectToken(this.lexer.next());
 
         expression[expression.length - 1] = {
           type: "union",
           left: expression[expression.length - 1],
-          right: (parseToken(next.value), expression.pop()),
+          right: (parseToken(next), expression.pop()),
         };
       } else {
         throw new Error("Urecognized token " + token.value);

@@ -11,11 +11,19 @@ interface EvaluationResult {
   }[];
 }
 
-export const consume = (
+type ConsumptionResult = string[] | null;
+
+export function consume(
   input: string,
   expression: Expression
-): string[] | null => {
+): ConsumptionResult;
+
+export function consume(
+  input: string,
+  expression: Expression
+): ConsumptionResult {
   // console.log("Testing", input, "with", expression);
+
   if (input.length === 0) {
     return null;
   }
@@ -23,7 +31,7 @@ export const consume = (
   if (expression.length > 1) {
     const [token, ...rest] = expression;
 
-    let matches: string[] = consume(input, [token]);
+    let matches = consume(input, [token]);
 
     //console.log("matches", matches);
 
@@ -51,39 +59,102 @@ export const consume = (
       } else {
         return null;
       }
-    case "repeatable": {
-      const matches = new Set<string>();
+    case "quantifier": {
+      if (token.repeat === "none-or-one") {
+        const match = consume(input, [token.child]);
 
-      let i = 0;
-      let match: string[] | null;
-
-      while ((match = consume(input.slice(i), [token.child])) !== null) {
-        // console.log(match);
-        for (const el of match) {
-          // console.log("Adding", input.slice(0, i) + match);
-          matches.add(input.slice(0, i) + match);
+        if (match) {
+          return [...match, ""];
+        } else {
+          return [""];
         }
-        i++;
-      }
+      } else if (token.repeat === "exact") {
+        const matches = new Set<string>();
 
-      // This makes it greedy by default.
-      const result = Array.from(matches.values()).toSorted(
-        (a, b) => b.length - a.length
-      );
+        let x = 1;
 
-      if (token.repeat === "none-or-more") {
-        // console.log(result);
-        return [...result, ""];
+        let submatches = consume(input, [token.child]);
+
+        // console.log("Submatches", submatches);
+
+        if (token.min <= 1) {
+          for (const submatch of submatches) {
+            matches.add(submatch);
+          }
+        }
+
+        while (
+          (submatches = submatches.flatMap((submatch) => {
+            return (
+              consume(input.slice(submatch.length), [token.child]) ?? []
+            ).map((match) => submatch + match);
+          })).length > 0
+        ) {
+          // console.log("Submatches", submatches);
+          if (
+            (token.min === null || x >= token.min) &&
+            (token.max === null || x <= token.max)
+          ) {
+            for (const submatch of submatches) {
+              matches.add(submatch);
+            }
+          }
+          x++;
+        }
+
+        // This makes it greedy by default.
+        const result = Array.from(matches.values()).toSorted(
+          (a, b) => b.length - a.length
+        );
+
+        if (token.min === 0) {
+          // console.log("Result", [...result, ""]);
+          return [...result, ""];
+        } else {
+          // console.log("Result", result);
+          return result;
+        }
       } else {
-        return result.length > 0 ? result : null;
+        const matches = new Set<string>();
+
+        let i = 0;
+        let match: string[] | null;
+
+        while ((match = consume(input.slice(i), [token.child])) !== null) {
+          // console.log(match);
+          for (const el of match) {
+            // console.log("Adding", input.slice(0, i) + match);
+            matches.add(input.slice(0, i) + match);
+          }
+          i += match.length;
+        }
+
+        // This makes it greedy by default.
+        const result = Array.from(matches.values()).toSorted(
+          (a, b) => b.length - a.length
+        );
+
+        if (token.repeat === "none-or-more") {
+          // console.log(result);
+          return [...result, ""];
+        } else {
+          return result.length > 0 ? result : null;
+        }
       }
     }
+    case "non-capturing-group": {
+      return consume(input, token.child);
+    }
     case "union": {
+      const left = consume(input, [token.left]) ?? [];
+      const right = consume(input, [token.right]) ?? [];
+
+      return left.concat(...right);
     }
     default:
       throw new Error("Unrecognized token type: " + token.type);
   }
-};
+}
 
 const combineResults = (
   a: EvaluationResult,
@@ -120,6 +191,8 @@ export class Evaluator {
       case "word": {
         const match = consume(input, [token]);
 
+        // console.log("Match", match);
+
         if (match) {
           return combineResults(
             {
@@ -132,8 +205,21 @@ export class Evaluator {
           return null;
         }
       }
-      case "repeatable": {
+      case "quantifier": {
         let matches = consume(input, [token]);
+
+        // console.log("Matches", matches);
+
+        if (matches === null) {
+          if (token.repeat === "one-or-more") {
+            return null;
+          } else {
+            return {
+              match: "",
+              groups: [],
+            };
+          }
+        }
 
         const results = matches.map((match) => {
           return combineResults(
