@@ -1,20 +1,11 @@
 import type { Token as LexerToken } from "../lexer/index.ts";
 
-interface CommonQuantifiers {
+interface Quantifier {
   type: "quantifier";
-  repeat: "none-or-one" | "none-or-more" | "one-or-more";
-  child: Token;
-}
-
-interface ExactQuantifiers {
-  type: "quantifier";
-  repeat: "exact";
   child: Token;
   min?: number;
   max?: number;
 }
-
-type Quantifiers = CommonQuantifiers | ExactQuantifiers;
 
 interface Word {
   type: "word";
@@ -40,7 +31,7 @@ interface Union {
 }
 
 export type Token =
-  | Quantifiers
+  | Quantifier
   | Word
   | NonCapturingGroup
   | CapturingGroup
@@ -81,19 +72,22 @@ export class Parser {
       } else if (token.value === "?") {
         expression[expression.length - 1] = {
           type: "quantifier",
-          repeat: "none-or-one",
+          min: 0,
+          max: 1,
           child: expression[expression.length - 1],
         };
       } else if (token.value === "*") {
         expression[expression.length - 1] = {
           type: "quantifier",
-          repeat: "none-or-more",
+          min: 0,
+          max: null,
           child: expression[expression.length - 1],
         };
       } else if (token.value === "+") {
         expression[expression.length - 1] = {
           type: "quantifier",
-          repeat: "one-or-more",
+          min: 1,
+          max: null,
           child: expression[expression.length - 1],
         };
       } else if (token.value === "{") {
@@ -105,7 +99,6 @@ export class Parser {
           if (/\d+/.test(max.value)) {
             expression[expression.length - 1] = {
               type: "quantifier",
-              repeat: "exact",
               child: expression[expression.length - 1],
               min: null,
               max: parseInt(max.value, 10),
@@ -127,7 +120,6 @@ export class Parser {
           if (next.value === "}") {
             expression[expression.length - 1] = {
               type: "quantifier",
-              repeat: "exact",
               child: expression[expression.length - 1],
               min,
               max: min,
@@ -138,7 +130,6 @@ export class Parser {
             if (next.value === "}") {
               expression[expression.length - 1] = {
                 type: "quantifier",
-                repeat: "exact",
                 child: expression[expression.length - 1],
                 min,
                 max: null,
@@ -146,7 +137,6 @@ export class Parser {
             } else if (/\d+/.test(next.value)) {
               expression[expression.length - 1] = {
                 type: "quantifier",
-                repeat: "exact",
                 child: expression[expression.length - 1],
                 min,
                 max: parseInt(next.value, 10),

@@ -79,7 +79,8 @@ exports[`Parser > input 'ab*c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "none-or-more",
+    "min": 0,
+    "max": null,
     "child": {
       "type": "word",
       "character": "b"
@@ -100,7 +101,8 @@ exports[`Parser > input 'ab+c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "one-or-more",
+    "min": 1,
+    "max": null,
     "child": {
       "type": "word",
       "character": "b"
@@ -121,7 +123,8 @@ exports[`Parser > input 'ab?c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "none-or-one",
+    "min": 0,
+    "max": 1,
     "child": {
       "type": "word",
       "character": "b"
@@ -142,7 +145,6 @@ exports[`Parser > input 'ab{,2}c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "exact",
     "child": {
       "type": "word",
       "character": "b"
@@ -165,7 +167,6 @@ exports[`Parser > input 'ab{0,1}c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "exact",
     "child": {
       "type": "word",
       "character": "b"
@@ -188,7 +189,6 @@ exports[`Parser > input 'ab{1,2}c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "exact",
     "child": {
       "type": "word",
       "character": "b"
@@ -211,7 +211,6 @@ exports[`Parser > input 'ab{1,}c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "exact",
     "child": {
       "type": "word",
       "character": "b"
@@ -234,7 +233,6 @@ exports[`Parser > input 'ab{1}c' 1`] = `
   },
   {
     "type": "quantifier",
-    "repeat": "exact",
     "child": {
       "type": "word",
       "character": "b"

@@ -60,86 +60,53 @@ export function consume(
         return null;
       }
     case "quantifier": {
-      if (token.repeat === "none-or-one") {
-        const match = consume(input, [token.child]);
+      const matches = new Set<string>();
 
-        if (match) {
-          return [...match, ""];
-        } else {
-          return [""];
+      let x = 1;
+
+      let submatches = consume(input, [token.child]);
+
+      // console.log("Submatches", submatches);
+
+      if (token.min <= 1 && submatches !== null) {
+        for (const submatch of submatches) {
+          matches.add(submatch);
         }
-      } else if (token.repeat === "exact") {
-        const matches = new Set<string>();
+      }
 
-        let x = 1;
-
-        let submatches = consume(input, [token.child]);
-
+      while (
+        submatches !== null &&
+        (token.max === null || x < token.max) &&
+        (submatches =
+          submatches.flatMap((submatch) => {
+            return (
+              consume(input.slice(submatch.length), [token.child]) ?? []
+            ).map((match) => submatch + match);
+          }) ?? []).length > 0
+      ) {
         // console.log("Submatches", submatches);
-
-        if (token.min <= 1) {
+        if (
+          (token.min === null || x >= token.min) &&
+          (token.max === null || x <= token.max)
+        ) {
           for (const submatch of submatches) {
             matches.add(submatch);
           }
         }
+        x++;
+      }
 
-        while (
-          (submatches = submatches.flatMap((submatch) => {
-            return (
-              consume(input.slice(submatch.length), [token.child]) ?? []
-            ).map((match) => submatch + match);
-          })).length > 0
-        ) {
-          // console.log("Submatches", submatches);
-          if (
-            (token.min === null || x >= token.min) &&
-            (token.max === null || x <= token.max)
-          ) {
-            for (const submatch of submatches) {
-              matches.add(submatch);
-            }
-          }
-          x++;
-        }
+      // This makes it greedy by default.
+      const result = Array.from(matches.values()).toSorted(
+        (a, b) => b.length - a.length
+      );
 
-        // This makes it greedy by default.
-        const result = Array.from(matches.values()).toSorted(
-          (a, b) => b.length - a.length
-        );
-
-        if (token.min === 0) {
-          // console.log("Result", [...result, ""]);
-          return [...result, ""];
-        } else {
-          // console.log("Result", result);
-          return result;
-        }
+      if (token.min === 0) {
+        // console.log("Result", [...result, ""]);
+        return [...result, ""];
       } else {
-        const matches = new Set<string>();
-
-        let i = 0;
-        let match: string[] | null;
-
-        while ((match = consume(input.slice(i), [token.child])) !== null) {
-          // console.log(match);
-          for (const el of match) {
-            // console.log("Adding", input.slice(0, i) + match);
-            matches.add(input.slice(0, i) + match);
-          }
-          i += match.length;
-        }
-
-        // This makes it greedy by default.
-        const result = Array.from(matches.values()).toSorted(
-          (a, b) => b.length - a.length
-        );
-
-        if (token.repeat === "none-or-more") {
-          // console.log(result);
-          return [...result, ""];
-        } else {
-          return result.length > 0 ? result : null;
-        }
+        // console.log("Result", result);
+        return result;
       }
     }
     case "non-capturing-group": {
