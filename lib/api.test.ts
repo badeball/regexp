@@ -51,9 +51,9 @@ describe("API", () => {
     example("a{1,}a", "aa");
     example("a{1,}a", "aaa");
     // Why doesn't this match in JS?
-    // example("a{,1}a", "a");
-    // example("a{,1}a", "aa");
-    // example("a{,1}a", "aaa");
+    //  example("a{,1}a", "a");
+    //  example("a{,1}a", "aa");
+    //  example("a{,1}a", "aaa");
     example("a{1,2}a", "a");
     example("a{1,2}a", "aa");
     example("a{1,2}a", "aaa");
@@ -62,6 +62,6 @@ describe("API", () => {
     example("a(?:b|c){1,2}d", "acd");
     example("a(?:b|c){1,2}d", "accd");
     example("a(?:b|c){1,2}d", "abcd");
-    // example("a(?:b|c){1,2}d", "acbd");
+    example("a(?:b|c){1,2}d", "acbd");
   });
 });

@@ -68,34 +68,53 @@ export interface UnionState {
 
 export type NodeState = QuantifierState | UnionState;
 
-export function findStatefulNodes(nodes: NodeList): NodeState[] {
+export function generateStatefulNodes(
+  nodes: NodeList,
+  partialStates: NodeState[],
+): NodeState[] {
   const states: NodeState[] = [];
 
   for (const node of nodes) {
     switch (node.type) {
       case "capturing-group":
-        return findStatefulNodes(node.children);
+        return generateStatefulNodes(node.children, partialStates);
       case "non-capturing-group":
-        return findStatefulNodes(node.children);
+        return generateStatefulNodes(node.children, partialStates);
       case "quantifier":
         {
-          states.push(...findStatefulNodes([node.child]), {
+          const state = partialStates.shift() ?? {
             type: "quantifier",
             node,
             iterations: node.max ?? MAX_ITERATIONS,
-          });
+          };
+
+          assert(
+            state.type === "quantifier",
+            "Expected to have a quantifier state",
+          );
+
+          states.push(state);
+
+          for (let i = 0; i < state.iterations; i++) {
+            states.push(...generateStatefulNodes([node.child], partialStates));
+          }
         }
         break;
       case "union":
         {
+          const state = partialStates.shift() ?? {
+            type: "union",
+            node,
+            direction: "left",
+          };
+
+          assert(state.type === "union", "Expected to have a quantifier state");
+
+          states.push(state);
+
           states.push(
-            {
-              type: "union",
-              node,
-              direction: "left",
-            },
-            ...findStatefulNodes([node.left]),
-            ...findStatefulNodes([node.right]),
+            ...generateStatefulNodes([node.left], partialStates),
+            ...generateStatefulNodes([node.right], partialStates),
           );
         }
         break;
@@ -118,17 +137,6 @@ export function continueNodeState(state: NodeState) {
   }
 }
 
-export function resetNodeState(state: NodeState) {
-  switch (state.type) {
-    case "quantifier":
-      state.iterations = state.node.max ?? MAX_ITERATIONS;
-      break;
-    case "union":
-      state.direction = "left";
-      break;
-  }
-}
-
 const MAX_ITERATIONS = 10;
 
 export function isAtLastState(state: NodeState) {
@@ -140,15 +148,10 @@ export function isAtLastState(state: NodeState) {
   }
 }
 
-export function resolveStatefulNode(node: Node, states: NodeState[]): NodeList {
+export function resolveStatefulNode(node: Node, state: NodeState): NodeList {
   switch (node.type) {
     case "quantifier":
       {
-        const state = ensure(
-          states.find((state) => state.node === node),
-          "Expected to find a node state",
-        );
-
         assert(
           state.type === "quantifier",
           "Expected to find a quantifier state",
@@ -162,13 +165,7 @@ export function resolveStatefulNode(node: Node, states: NodeState[]): NodeList {
 
         return nodes;
       }
-      break;
     case "union": {
-      const state = ensure(
-        states.find((state) => state.node === node),
-        "Expected to find a node state",
-      );
-
       assert(state.type === "union", "Expected to find a union state");
 
       if (state.direction === "left") {
@@ -184,8 +181,8 @@ export function resolveStatefulNode(node: Node, states: NodeState[]): NodeList {
 
 export function _iterateStatesByOne(states: NodeState[], i: number) {
   if (isAtLastState(states[i])) {
-    resetNodeState(states[i]);
-    continueNodeState(states[i - 1]);
+    states.pop();
+    _iterateStatesByOne(states, i - 1);
   } else {
     continueNodeState(states[i]);
   }
@@ -256,7 +253,7 @@ export function consumeUsingState(
     }
     case "quantifier":
     case "union": {
-      const resolvedNodes = resolveStatefulNode(node, states);
+      const resolvedNodes = resolveStatefulNode(node, states.shift()!);
 
       // console.log("resolved nodes", resolvedNodes);
 
@@ -311,23 +308,39 @@ export class Evaluator {
     this.expression = expression;
   }
 
-  evaluate(input: string, position: number = 0): EvaluationResult | null {
-    const states = findStatefulNodes(this.expression);
+  evaluate(input: string): EvaluationResult | null {
+    let states = generateStatefulNodes(this.expression, []);
 
     let match: EvaluationResult | null;
 
+    let i = 0;
+
+    console.log("states", states);
+
     while (
-      (match = consumeUsingState(input, this.expression, states, 0)) === null
+      (match = consumeUsingState(input, this.expression, states.slice(), 0)) === null
     ) {
       const allPermutationsExhausted = states.every((state) =>
         isAtLastState(state),
       );
+
+      // console.log({ allPermutationsExhausted })
 
       if (allPermutationsExhausted) {
         break;
       }
 
       iterateStatesByOne(states);
+
+      console.log("partialStates", states);
+
+      states = generateStatefulNodes(this.expression, states);
+
+      console.log("states", states);
+
+      if (i++ === 20) {
+        throw new Error("Noo!!!")
+      }
     }
 
     return match;

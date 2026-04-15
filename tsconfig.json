@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
   }
 }

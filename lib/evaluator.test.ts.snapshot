@@ -73,19 +73,6 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
       "min": 1,
       "max": null,
       "child": {
-        "type": "word",
-        "character": "a"
-      }
-    },
-    "iterations": 10
-  },
-  {
-    "type": "quantifier",
-    "node": {
-      "type": "quantifier",
-      "min": 1,
-      "max": null,
-      "child": {
         "type": "capturing-group",
         "children": [
           {
@@ -102,6 +89,136 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
             "character": "b"
           }
         ]
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
       }
     },
     "iterations": 10
