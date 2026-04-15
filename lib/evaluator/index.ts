@@ -1,6 +1,35 @@
 import { inspect } from "node:util";
 
-import type { Expression, Token } from "../parser/index.ts";
+import type {
+  Word,
+  Quantifier,
+  Union,
+  NodeList,
+  Node,
+} from "../parser/index.ts";
+import { assert, ensure } from "../helpers.ts";
+
+interface EmptyMatch {
+  type: "empty";
+  match: "";
+  next?: MatchTree;
+}
+
+interface WordMatch {
+  type: "word";
+  node: Word;
+  match: string;
+  next?: MatchTree;
+}
+
+interface QuantifierMatch {
+  type: "quantifier";
+  node: Quantifier;
+  match: string;
+  next?: MatchTree;
+}
+
+type MatchTree = EmptyMatch | WordMatch | QuantifierMatch;
 
 interface EvaluationResult {
   match: string;
@@ -11,121 +40,9 @@ interface EvaluationResult {
   }[];
 }
 
-type ConsumptionResult = string[] | null;
-
-export function consume(
-  input: string,
-  expression: Expression
-): ConsumptionResult;
-
-export function consume(
-  input: string,
-  expression: Expression
-): ConsumptionResult {
-  // console.log("Testing", input, "with", expression);
-
-  if (input.length === 0) {
-    return null;
-  }
-
-  if (expression.length > 1) {
-    const [token, ...rest] = expression;
-
-    let matches = consume(input, [token]);
-
-    //console.log("matches", matches);
-
-    for (let i = 0; i < rest.length; i++) {
-      matches = matches.flatMap((match) => {
-        const subMatch = consume(input.slice(match.length), [rest[i]]);
-
-        //console.log("subMatch", subMatch);
-
-        return subMatch === null ? [] : subMatch.map((el) => match + el);
-      });
-    }
-
-    //console.log("matches afterwards", matches);
-
-    return matches;
-  }
-
-  const [token] = expression;
-
-  switch (token.type) {
-    case "word":
-      if (input[0] === token.character) {
-        return [input[0]];
-      } else {
-        return null;
-      }
-    case "quantifier": {
-      const matches = new Set<string>();
-
-      let x = 1;
-
-      let submatches = consume(input, [token.child]);
-
-      // console.log("Submatches", submatches);
-
-      if (token.min <= 1 && submatches !== null) {
-        for (const submatch of submatches) {
-          matches.add(submatch);
-        }
-      }
-
-      while (
-        submatches !== null &&
-        (token.max === null || x < token.max) &&
-        (submatches =
-          submatches.flatMap((submatch) => {
-            return (
-              consume(input.slice(submatch.length), [token.child]) ?? []
-            ).map((match) => submatch + match);
-          }) ?? []).length > 0
-      ) {
-        // console.log("Submatches", submatches);
-        if (
-          (token.min === null || x >= token.min) &&
-          (token.max === null || x <= token.max)
-        ) {
-          for (const submatch of submatches) {
-            matches.add(submatch);
-          }
-        }
-        x++;
-      }
-
-      // This makes it greedy by default.
-      const result = Array.from(matches.values()).toSorted(
-        (a, b) => b.length - a.length
-      );
-
-      if (token.min === 0) {
-        // console.log("Result", [...result, ""]);
-        return [...result, ""];
-      } else {
-        // console.log("Result", result);
-        return result;
-      }
-    }
-    case "non-capturing-group": {
-      return consume(input, token.child);
-    }
-    case "union": {
-      const left = consume(input, [token.left]) ?? [];
-      const right = consume(input, [token.right]) ?? [];
-
-      return left.concat(...right);
-    }
-    default:
-      throw new Error("Unrecognized token type: " + token.type);
-  }
-}
-
 const combineResults = (
   a: EvaluationResult,
-  b: EvaluationResult | null
+  b: EvaluationResult | null,
 ): EvaluationResult | null => {
   if (b === null) {
     return null;
@@ -137,219 +54,282 @@ const combineResults = (
   }
 };
 
-export class Evaluator {
-  private expression: Expression;
+export interface QuantifierState {
+  type: "quantifier";
+  node: Quantifier;
+  iterations: number;
+}
 
-  constructor(expression: Expression) {
+export interface UnionState {
+  type: "union";
+  node: Union;
+  direction: "left" | "right";
+}
+
+export type NodeState = QuantifierState | UnionState;
+
+export function findStatefulNodes(nodes: NodeList): NodeState[] {
+  const states: NodeState[] = [];
+
+  for (const node of nodes) {
+    switch (node.type) {
+      case "capturing-group":
+        return findStatefulNodes(node.children);
+      case "non-capturing-group":
+        return findStatefulNodes(node.children);
+      case "quantifier":
+        {
+          states.push(...findStatefulNodes([node.child]), {
+            type: "quantifier",
+            node,
+            iterations: node.max ?? MAX_ITERATIONS,
+          });
+        }
+        break;
+      case "union":
+        {
+          states.push(
+            {
+              type: "union",
+              node,
+              direction: "left",
+            },
+            ...findStatefulNodes([node.left]),
+            ...findStatefulNodes([node.right]),
+          );
+        }
+        break;
+      case "word":
+        break;
+    }
+  }
+
+  return states;
+}
+
+export function continueNodeState(state: NodeState) {
+  switch (state.type) {
+    case "quantifier":
+      state.iterations -= 1;
+      break;
+    case "union":
+      state.direction = "right";
+      break;
+  }
+}
+
+export function resetNodeState(state: NodeState) {
+  switch (state.type) {
+    case "quantifier":
+      state.iterations = state.node.max ?? MAX_ITERATIONS;
+      break;
+    case "union":
+      state.direction = "left";
+      break;
+  }
+}
+
+const MAX_ITERATIONS = 10;
+
+export function isAtLastState(state: NodeState) {
+  switch (state.type) {
+    case "quantifier":
+      return state.iterations === (state.node.min ?? 0);
+    case "union":
+      return state.direction === "right";
+  }
+}
+
+export function resolveStatefulNode(node: Node, states: NodeState[]): NodeList {
+  switch (node.type) {
+    case "quantifier":
+      {
+        const state = ensure(
+          states.find((state) => state.node === node),
+          "Expected to find a node state",
+        );
+
+        assert(
+          state.type === "quantifier",
+          "Expected to find a quantifier state",
+        );
+
+        const nodes = [];
+
+        for (let i = 0; i < state.iterations; i++) {
+          nodes.push(node.child);
+        }
+
+        return nodes;
+      }
+      break;
+    case "union": {
+      const state = ensure(
+        states.find((state) => state.node === node),
+        "Expected to find a node state",
+      );
+
+      assert(state.type === "union", "Expected to find a union state");
+
+      if (state.direction === "left") {
+        return [node.left];
+      } else {
+        return [node.right];
+      }
+    }
+    default:
+      throw new Error("Unexpected node type: " + node.type);
+  }
+}
+
+export function _iterateStatesByOne(states: NodeState[], i: number) {
+  if (isAtLastState(states[i])) {
+    resetNodeState(states[i]);
+    continueNodeState(states[i - 1]);
+  } else {
+    continueNodeState(states[i]);
+  }
+}
+
+export function iterateStatesByOne(states: NodeState[]) {
+  _iterateStatesByOne(states, states.length - 1);
+}
+
+export function consumeUsingState(
+  input: string,
+  nodes: NodeList,
+  states: NodeState[],
+  position = 0,
+): EvaluationResult | null {
+  if (nodes.length === 0) {
+    return {
+      match: "",
+      groups: [],
+    };
+  }
+
+  const [node, ...rest] = nodes;
+
+  switch (node.type) {
+    case "capturing-group": {
+      const match = consumeUsingState(input, node.children, states, position);
+
+      if (match) {
+        match.groups.push({
+          match: match.match,
+          start: position,
+        });
+
+        const length = match.match.length;
+
+        return combineResults(
+          match,
+          consumeUsingState(
+            input.slice(length),
+            rest,
+            states,
+            position + length,
+          ),
+        );
+      } else {
+        return null;
+      }
+    }
+    case "non-capturing-group": {
+      const match = consumeUsingState(input, node.children, states, position);
+
+      if (match) {
+        const length = match.match.length;
+
+        return combineResults(
+          match,
+          consumeUsingState(
+            input.slice(length),
+            rest,
+            states,
+            position + length,
+          ),
+        );
+      } else {
+        return null;
+      }
+    }
+    case "quantifier":
+    case "union": {
+      const resolvedNodes = resolveStatefulNode(node, states);
+
+      // console.log("resolved nodes", resolvedNodes);
+
+      const match = consumeUsingState(input, resolvedNodes, states, position);
+
+      if (match) {
+        const length = match.match.length;
+
+        return combineResults(
+          match,
+          consumeUsingState(
+            input.slice(length),
+            rest,
+            states,
+            position + length,
+          ),
+        );
+      } else {
+        return null;
+      }
+    }
+    case "word": {
+      if (input[0] === node.character) {
+        const consumedRest = consumeUsingState(
+          input.slice(1),
+          rest,
+          states,
+          position + 1,
+        );
+
+        // console.log("rest", rest);
+        // console.log("consumed rest", consumedRest);
+
+        return combineResults(
+          {
+            match: input[0],
+            groups: [],
+          },
+          consumedRest,
+        );
+      } else {
+        return null;
+      }
+    }
+  }
+}
+
+export class Evaluator {
+  private expression: NodeList;
+
+  constructor(expression: NodeList) {
     this.expression = expression;
   }
 
   evaluate(input: string, position: number = 0): EvaluationResult | null {
-    const [token, ...rest] = this.expression;
+    const states = findStatefulNodes(this.expression);
 
-    if (!token) {
-      return {
-        match: "",
-        groups: [],
-      };
+    let match: EvaluationResult | null;
+
+    while (
+      (match = consumeUsingState(input, this.expression, states, 0)) === null
+    ) {
+      const allPermutationsExhausted = states.every((state) =>
+        isAtLastState(state),
+      );
+
+      if (allPermutationsExhausted) {
+        break;
+      }
+
+      iterateStatesByOne(states);
     }
 
-    switch (token.type) {
-      case "word": {
-        const match = consume(input, [token]);
-
-        // console.log("Match", match);
-
-        if (match) {
-          return combineResults(
-            {
-              match: match[0],
-              groups: [],
-            },
-            new Evaluator(rest).evaluate(input.slice(1), position + 1)
-          );
-        } else {
-          return null;
-        }
-      }
-      case "quantifier": {
-        let matches = consume(input, [token]);
-
-        // console.log("Matches", matches);
-
-        if (matches === null) {
-          if (token.repeat === "one-or-more") {
-            return null;
-          } else {
-            return {
-              match: "",
-              groups: [],
-            };
-          }
-        }
-
-        const results = matches.map((match) => {
-          return combineResults(
-            {
-              match: match,
-              groups: [],
-            },
-            new Evaluator(rest).evaluate(
-              input.slice(match.length),
-              position + match.length
-            )
-          );
-        });
-
-        return results.find((result) => result !== null) ?? null;
-      }
-      case "non-capturing-group": {
-        let matches = consume(input, token.child);
-
-        const results = matches.map((match) => {
-          return combineResults(
-            {
-              match: match,
-              groups: [],
-            },
-            new Evaluator(rest).evaluate(
-              input.slice(match.length),
-              position + match.length
-            )
-          );
-        });
-
-        return results.find((result) => result !== null) ?? null;
-      }
-      case "capturing-group": {
-        let matches = consume(input, token.child);
-
-        const results = matches.map((match) => {
-          return combineResults(
-            {
-              match: match,
-              groups: [
-                {
-                  match,
-                  start: position,
-                },
-              ],
-            },
-            new Evaluator(rest).evaluate(
-              input.slice(match.length),
-              position + match.length
-            )
-          );
-        });
-
-        return results.find((result) => result !== null) ?? null;
-      }
-      case "union": {
-        let matches = [
-          ...(consume(input, [token.left]) ?? []),
-          ...(consume(input, [token.right]) ?? []),
-        ];
-
-        const results = matches.map((match) => {
-          return combineResults(
-            {
-              match: match,
-              groups: [],
-            },
-            new Evaluator(rest).evaluate(
-              input.slice(match.length),
-              position + match.length
-            )
-          );
-        });
-
-        return results.find((result) => result !== null) ?? null;
-      }
-      default:
-        throw new Error("Unrecognized token type: " + token.type);
-    }
+    return match;
   }
-
-  // evaluate(input: string): string[] | null {
-  //   let position = 0;
-
-  //   const captured: string[] = [];
-
-  //   // console.log(inspect(this.expression));
-
-  //   for (const node of this.expression) {
-  //     if (node.type === "word") {
-  //       if (input[position] === node.character) {
-  //         position++;
-  //       } else {
-  //         return null;
-  //       }
-  //     } else if (node.type === "repeatable") {
-  //       if (node.repeat === "none-or-more") {
-  //         let match: string[];
-
-  //         while (
-  //           (match = new Evaluator([node.child]).evaluate(
-  //             input.slice(position)
-  //           ))
-  //         ) {
-  //           position += match.length;
-  //         }
-  //       } else {
-  //         let match = new Evaluator([node.child]).evaluate(
-  //           input.slice(position)
-  //         );
-
-  //         if (match === null) {
-  //           return null;
-  //         } else {
-  //           position += match.length;
-  //         }
-
-  //         while (
-  //           (match = new Evaluator([node.child]).evaluate(
-  //             input.slice(position)
-  //           ))
-  //         ) {
-  //           position += match.length;
-  //         }
-  //       }
-  //     } else if (node.type === "non-capturing-group") {
-  //       let match = new Evaluator(node.child).evaluate(input.slice(position));
-
-  //       if (match === null) {
-  //         return null;
-  //       } else {
-  //         position += match.length;
-  //       }
-  //     } else if (node.type === "capturing-group") {
-  //       let match = new Evaluator(node.child).evaluate(input.slice(position));
-
-  //       if (match === null) {
-  //         return null;
-  //       } else {
-  //         captured.push(...match);
-  //         position += match.length;
-  //       }
-  //     } else if (node.type === "union") {
-  //       let match = new Evaluator([node.left]).evaluate(input.slice(position));
-
-  //       if (match) {
-  //         position += match.length;
-  //       } else {
-  //         match = new Evaluator([node.right]).evaluate(input.slice(position));
-
-  //         if (match) {
-  //           position += match.length;
-  //         } else {
-  //           return null;
-  //         }
-  //       }
-  //     } else {
-  //       throw new Error("Unrecognized token type: " + node.type);
-  //     }
-  //   }
-
-  //   return [input.slice(0, position), ...captured];
-  // }
 }

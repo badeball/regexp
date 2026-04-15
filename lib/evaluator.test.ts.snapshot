@@ -1,0 +1,141 @@
+exports[`Lexer > findStatefulNodes() > input '(a+)|(b+)' 1`] = `
+[
+  {
+    "type": "union",
+    "node": {
+      "type": "union",
+      "left": {
+        "type": "capturing-group",
+        "children": [
+          {
+            "type": "quantifier",
+            "min": 1,
+            "max": null,
+            "child": {
+              "type": "word",
+              "character": "a"
+            }
+          }
+        ]
+      },
+      "right": {
+        "type": "capturing-group",
+        "children": [
+          {
+            "type": "quantifier",
+            "min": 1,
+            "max": null,
+            "child": {
+              "type": "word",
+              "character": "b"
+            }
+          }
+        ]
+      }
+    },
+    "direction": "left"
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "b"
+      }
+    },
+    "iterations": 10
+  }
+]
+`;
+
+exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
+[
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "capturing-group",
+        "children": [
+          {
+            "type": "quantifier",
+            "min": 1,
+            "max": null,
+            "child": {
+              "type": "word",
+              "character": "a"
+            }
+          },
+          {
+            "type": "word",
+            "character": "b"
+          }
+        ]
+      }
+    },
+    "iterations": 10
+  }
+]
+`;
+
+exports[`Lexer > findStatefulNodes() > input 'a+b+' 1`] = `
+[
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "a"
+      }
+    },
+    "iterations": 10
+  },
+  {
+    "type": "quantifier",
+    "node": {
+      "type": "quantifier",
+      "min": 1,
+      "max": null,
+      "child": {
+        "type": "word",
+        "character": "b"
+      }
+    },
+    "iterations": 10
+  }
+]
+`;

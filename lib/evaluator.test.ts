@@ -4,27 +4,22 @@ import { inspect } from "node:util";
 
 import { Lexer } from "./lexer/index.ts";
 import { Parser } from "./parser/index.ts";
-import { consume } from "./evaluator/index.ts";
+import { findStatefulNodes } from "./evaluator/index.ts";
 
 describe("Lexer", () => {
-  describe("consume()", () => {
-    const example = (input: string, expression: string, expected: string[]) => {
-      test(`input ${inspect(input)}, expression ${inspect(expression)}`, () => {
-        const lexer = new Lexer(expression);
-        const parser = new Parser(lexer[Symbol.iterator]());
-        const actual = consume(input, parser.parse());
-        // console.log("actual", actual);
-        deepEqual(actual, expected);
+  describe("findStatefulNodes()", () => {
+    const example = (expression: string) => {
+      test(`input ${inspect(expression)}`, (t) => {
+          const lexer = new Lexer(expression);
+          const parser = new Parser(lexer[Symbol.iterator]());
+          const nodes = parser.parse();
+          const actual = findStatefulNodes(nodes);
+          t.assert.snapshot(actual);
       });
     };
 
-    example("a", "a", ["a"]);
-    example("aa", "a+", ["aa", "a"]);
-    example("aa", "a*", ["aa", "a", ""]);
-    example("aaa", "a*a", ["aaa", "aa", "a"]);
-
-    example("a", "b*", [""]);
-    example("a", "b*a", ["a"]);
-    example("a", "b*a*", ["a", ""]);
+    example("a+b+");
+    example("(a+b)+c");
+    example("(a+)|(b+)");
   });
 });

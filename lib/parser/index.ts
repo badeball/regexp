@@ -1,43 +1,43 @@
 import type { Token as LexerToken } from "../lexer/index.ts";
 
-interface Quantifier {
+export interface Quantifier {
   type: "quantifier";
-  child: Token;
-  min?: number;
-  max?: number;
+  child: Node;
+  min: number | null;
+  max: number | null;
 }
 
-interface Word {
+export interface Word {
   type: "word";
   character: string;
 }
 
-interface NonCapturingGroup {
+export interface NonCapturingGroup {
   type: "non-capturing-group";
   name?: string;
-  child: Expression;
+  children: NodeList;
 }
 
-interface CapturingGroup {
+export interface CapturingGroup {
   type: "capturing-group";
   name?: string;
-  child: Expression;
+  children: NodeList;
 }
 
-interface Union {
+export interface Union {
   type: "union";
-  left: Token;
-  right: Token;
+  left: Node;
+  right: Node;
 }
 
-export type Token =
+export type Node =
   | Quantifier
   | Word
   | NonCapturingGroup
   | CapturingGroup
   | Union;
 
-export type Expression = Token[];
+export type NodeList = Node[];
 
 const expectToken = (maybe: IteratorResult<LexerToken>): LexerToken => {
   if (maybe.done) {
@@ -59,7 +59,7 @@ export class Parser {
   }
 
   parseTokenList(until?: string) {
-    const expression: Expression = [];
+    const expression: NodeList = [];
 
     let el: IteratorResult<LexerToken>;
 
@@ -74,8 +74,7 @@ export class Parser {
           type: "quantifier",
           min: 0,
           max: 1,
-          child: expression[expression.length - 1],
-        };
+          child: expression[expression.length - 1],        };
       } else if (token.value === "*") {
         expression[expression.length - 1] = {
           type: "quantifier",
@@ -159,12 +158,12 @@ export class Parser {
       } else if (token.value === "(?:") {
         expression.push({
           type: "non-capturing-group",
-          child: this.parseTokenList(")"),
+          children: this.parseTokenList(")"),
         });
       } else if (token.value === "(") {
         expression.push({
           type: "capturing-group",
-          child: this.parseTokenList(")"),
+          children: this.parseTokenList(")"),
         });
       } else if (token.value === "|") {
         const next = expectToken(this.lexer.next());
@@ -172,7 +171,7 @@ export class Parser {
         expression[expression.length - 1] = {
           type: "union",
           left: expression[expression.length - 1],
-          right: (parseToken(next), expression.pop()),
+          right: (parseToken(next), expression.pop()!),
         };
       } else {
         throw new Error("Urecognized token " + token.value);

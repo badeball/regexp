@@ -1,3 +1,39 @@
+exports[`Parser > input '(a+)|(b+)' 1`] = `
+[
+  {
+    "type": "union",
+    "left": {
+      "type": "capturing-group",
+      "children": [
+        {
+          "type": "quantifier",
+          "min": 1,
+          "max": null,
+          "child": {
+            "type": "word",
+            "character": "a"
+          }
+        }
+      ]
+    },
+    "right": {
+      "type": "capturing-group",
+      "children": [
+        {
+          "type": "quantifier",
+          "min": 1,
+          "max": null,
+          "child": {
+            "type": "word",
+            "character": "b"
+          }
+        }
+      ]
+    }
+  }
+]
+`;
+
 exports[`Parser > input 'a(?:b)c' 1`] = `
 [
   {
@@ -6,7 +42,7 @@ exports[`Parser > input 'a(?:b)c' 1`] = `
   },
   {
     "type": "non-capturing-group",
-    "child": [
+    "children": [
       {
         "type": "word",
         "character": "b"
@@ -28,7 +64,7 @@ exports[`Parser > input 'a(?:b|c)c' 1`] = `
   },
   {
     "type": "non-capturing-group",
-    "child": [
+    "children": [
       {
         "type": "union",
         "left": {
@@ -57,7 +93,7 @@ exports[`Parser > input 'a(b)c' 1`] = `
   },
   {
     "type": "capturing-group",
-    "child": [
+    "children": [
       {
         "type": "word",
         "character": "b"
