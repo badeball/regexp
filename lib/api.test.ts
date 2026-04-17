@@ -43,6 +43,7 @@ describe("API", () => {
     example("a|b", "b");
     example("a*a", "a");
     example("a*a", "aa");
+    example("a*?a", "aa");
     example("a+a", "a");
     example("a+a", "aa");
     example("a{1}a", "a");

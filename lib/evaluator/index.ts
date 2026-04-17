@@ -85,7 +85,9 @@ export function generateStatefulNodes(
           const state = partialStates.shift() ?? {
             type: "quantifier",
             node,
-            iterations: node.max ?? MAX_ITERATIONS,
+            iterations: node.greedy
+              ? (node.max ?? MAX_ITERATIONS)
+              : (node.min ?? 0),
           };
 
           assert(
@@ -129,7 +131,11 @@ export function generateStatefulNodes(
 export function continueNodeState(state: NodeState) {
   switch (state.type) {
     case "quantifier":
-      state.iterations -= 1;
+      if (state.node.greedy) {
+        state.iterations -= 1;
+      } else {
+        state.iterations += 1;
+      }
       break;
     case "union":
       state.direction = "right";
@@ -142,7 +148,11 @@ const MAX_ITERATIONS = 10;
 export function isAtLastState(state: NodeState) {
   switch (state.type) {
     case "quantifier":
-      return state.iterations === (state.node.min ?? 0);
+      if (state.node.greedy) {
+        return state.iterations === (state.node.min ?? 0);
+      } else {
+        return state.iterations === (state.node.max ?? MAX_ITERATIONS);
+      }
     case "union":
       return state.direction === "right";
   }
@@ -150,21 +160,20 @@ export function isAtLastState(state: NodeState) {
 
 export function resolveStatefulNode(node: Node, state: NodeState): NodeList {
   switch (node.type) {
-    case "quantifier":
-      {
-        assert(
-          state.type === "quantifier",
-          "Expected to find a quantifier state",
-        );
+    case "quantifier": {
+      assert(
+        state.type === "quantifier",
+        "Expected to find a quantifier state",
+      );
 
-        const nodes = [];
+      const nodes = [];
 
-        for (let i = 0; i < state.iterations; i++) {
-          nodes.push(node.child);
-        }
-
-        return nodes;
+      for (let i = 0; i < state.iterations; i++) {
+        nodes.push(node.child);
       }
+
+      return nodes;
+    }
     case "union": {
       assert(state.type === "union", "Expected to find a union state");
 
@@ -305,6 +314,7 @@ export class Evaluator {
   private expression: NodeList;
 
   constructor(expression: NodeList) {
+    // console.log(expression);
     this.expression = expression;
   }
 
@@ -315,10 +325,11 @@ export class Evaluator {
 
     let i = 0;
 
-    console.log("states", states);
+    // console.log("states", states);
 
     while (
-      (match = consumeUsingState(input, this.expression, states.slice(), 0)) === null
+      (match = consumeUsingState(input, this.expression, states.slice(), 0)) ===
+      null
     ) {
       const allPermutationsExhausted = states.every((state) =>
         isAtLastState(state),
@@ -332,14 +343,14 @@ export class Evaluator {
 
       iterateStatesByOne(states);
 
-      console.log("partialStates", states);
+      // console.log("partialStates", states);
 
       states = generateStatefulNodes(this.expression, states);
 
-      console.log("states", states);
+      // console.log("states", states);
 
       if (i++ === 20) {
-        throw new Error("Noo!!!")
+        throw new Error("Noo!!!");
       }
     }
 

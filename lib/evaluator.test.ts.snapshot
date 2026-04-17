@@ -9,6 +9,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+)|(b+)' 1`] = `
         "children": [
           {
             "type": "quantifier",
+            "greedy": true,
             "min": 1,
             "max": null,
             "child": {
@@ -23,6 +24,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+)|(b+)' 1`] = `
         "children": [
           {
             "type": "quantifier",
+            "greedy": true,
             "min": 1,
             "max": null,
             "child": {
@@ -39,6 +41,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+)|(b+)' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -52,6 +55,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+)|(b+)' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -70,6 +74,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -77,6 +82,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
         "children": [
           {
             "type": "quantifier",
+            "greedy": true,
             "min": 1,
             "max": null,
             "child": {
@@ -97,6 +103,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -110,6 +117,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -123,6 +131,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -136,6 +145,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -149,6 +159,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -162,6 +173,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -175,6 +187,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -188,6 +201,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -201,6 +215,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -214,6 +229,7 @@ exports[`Lexer > findStatefulNodes() > input '(a+b)+c' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -232,6 +248,7 @@ exports[`Lexer > findStatefulNodes() > input 'a+b+' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {
@@ -245,6 +262,7 @@ exports[`Lexer > findStatefulNodes() > input 'a+b+' 1`] = `
     "type": "quantifier",
     "node": {
       "type": "quantifier",
+      "greedy": true,
       "min": 1,
       "max": null,
       "child": {

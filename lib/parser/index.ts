@@ -3,6 +3,7 @@ import type { Token as LexerToken } from "../lexer/index.ts";
 export interface Quantifier {
   type: "quantifier";
   child: Node;
+  greedy: boolean;
   min: number | null;
   max: number | null;
 }
@@ -70,14 +71,23 @@ export class Parser {
           character: token.value,
         });
       } else if (token.value === "?") {
-        expression[expression.length - 1] = {
-          type: "quantifier",
-          min: 0,
-          max: 1,
-          child: expression[expression.length - 1],        };
+        const last = expression[expression.length - 1];
+
+        if (last.type === "quantifier") {
+          last.greedy = false;
+        } else {
+          expression[expression.length - 1] = {
+            type: "quantifier",
+            greedy: true,
+            min: 0,
+            max: 1,
+            child: expression[expression.length - 1],
+          };
+        }
       } else if (token.value === "*") {
         expression[expression.length - 1] = {
           type: "quantifier",
+          greedy: true,
           min: 0,
           max: null,
           child: expression[expression.length - 1],
@@ -85,6 +95,7 @@ export class Parser {
       } else if (token.value === "+") {
         expression[expression.length - 1] = {
           type: "quantifier",
+          greedy: true,
           min: 1,
           max: null,
           child: expression[expression.length - 1],
@@ -99,6 +110,7 @@ export class Parser {
             expression[expression.length - 1] = {
               type: "quantifier",
               child: expression[expression.length - 1],
+              greedy: true,
               min: null,
               max: parseInt(max.value, 10),
             };
@@ -120,6 +132,7 @@ export class Parser {
             expression[expression.length - 1] = {
               type: "quantifier",
               child: expression[expression.length - 1],
+              greedy: true,
               min,
               max: min,
             };
@@ -130,6 +143,7 @@ export class Parser {
               expression[expression.length - 1] = {
                 type: "quantifier",
                 child: expression[expression.length - 1],
+                greedy: true,
                 min,
                 max: null,
               };
@@ -137,6 +151,7 @@ export class Parser {
               expression[expression.length - 1] = {
                 type: "quantifier",
                 child: expression[expression.length - 1],
+                greedy: true,
                 min,
                 max: parseInt(next.value, 10),
               };
