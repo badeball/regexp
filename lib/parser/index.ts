@@ -40,6 +40,7 @@ export interface Range {
 
 export interface Alternative {
   type: "alternative";
+  negated: boolean;
   nodes: (Word | Range)[];
 }
 
@@ -206,6 +207,7 @@ export class Parser {
         let next: LexerToken;
         const alternative: Alternative = {
           type: "alternative",
+          negated: false,
           nodes: [],
         };
 
@@ -251,6 +253,12 @@ export class Parser {
                 left,
                 right: null as unknown as Word,
               });
+            }
+          }else if (next.value === "^") {
+            if (alternative.nodes.length === 0) {
+              alternative.negated = true;
+            } else {
+              throw new Error("Expected negation at the beginning")
             }
           } else {
             throw new Error("Urecognized token " + next.value);

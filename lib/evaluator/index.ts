@@ -312,13 +312,16 @@ export function consumeUsingState(
         node.nodes.some((alternative) => {
           switch (alternative.type) {
             case "word":
-              return input[0] === alternative.character;
+              const match = input[0] === alternative.character;
+
+              return node.negated ? !match : match;
             case "range":
               const start = alternative.left.character.charCodeAt(0);
               const end = alternative.right.character.charCodeAt(0);
               const actual = input.charCodeAt(0);
+              const inside = actual >= start && actual <= end;
 
-              return actual >= start && actual <= end;
+              return node.negated ? !inside : inside;
             default:
               throw new Error("Unrecognized node type: " + node.type);
           }

@@ -71,5 +71,7 @@ describe("API", () => {
     example("[-a]", "-");
     example("[a-]", "a");
     example("[a-]", "-");
+    example("[^a-c]", "a");
+    example("[^a-c]", "d");
   });
 });

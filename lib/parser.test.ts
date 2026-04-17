@@ -29,4 +29,5 @@ describe("Parser", () => {
   example("[-ab]");
   example("[ab-]");
   example("[a-b]");
+  example("[^a-b]");
 });

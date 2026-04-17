@@ -15,6 +15,7 @@ const lexer = new RegExp(
     "\\[",
     "\\]",
     "\\-",
+    "\\^"
   ].join("|"),
   "g"
 );

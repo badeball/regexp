@@ -40,6 +40,7 @@ exports[`Parser > input '[-ab]' 1`] = `
 [
   {
     "type": "alternative",
+    "negated": false,
     "nodes": [
       {
         "type": "word",
@@ -58,10 +59,33 @@ exports[`Parser > input '[-ab]' 1`] = `
 ]
 `;
 
+exports[`Parser > input '[^a-b]' 1`] = `
+[
+  {
+    "type": "alternative",
+    "negated": true,
+    "nodes": [
+      {
+        "type": "range",
+        "left": {
+          "type": "word",
+          "character": "a"
+        },
+        "right": {
+          "type": "word",
+          "character": "b"
+        }
+      }
+    ]
+  }
+]
+`;
+
 exports[`Parser > input '[a-b]' 1`] = `
 [
   {
     "type": "alternative",
+    "negated": false,
     "nodes": [
       {
         "type": "range",
@@ -83,6 +107,7 @@ exports[`Parser > input '[ab-]' 1`] = `
 [
   {
     "type": "alternative",
+    "negated": false,
     "nodes": [
       {
         "type": "word",
