@@ -307,6 +307,33 @@ export function consumeUsingState(
         return null;
       }
     }
+    case "alternative": {
+      if (
+        node.nodes.some((alternative) => {
+          switch (alternative.type) {
+            case "word":
+              return input[0] === alternative.character;
+            case "range":
+              const start = alternative.left.character.charCodeAt(0);
+              const end = alternative.right.character.charCodeAt(0);
+              const actual = input.charCodeAt(0);
+
+              return actual >= start && actual <= end;
+            default:
+              throw new Error("Unrecognized node type: " + node.type);
+          }
+        })
+      ) {
+        return {
+          match: input[0],
+          groups: [],
+        };
+      } else {
+        return null;
+      }
+    }
+    default:
+      throw new Error("Unrecognized node type: " + node.type);
   }
 }
 

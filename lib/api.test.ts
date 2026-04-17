@@ -64,5 +64,12 @@ describe("API", () => {
     example("a(?:b|c){1,2}d", "accd");
     example("a(?:b|c){1,2}d", "abcd");
     example("a(?:b|c){1,2}d", "acbd");
+    example("[a-c]", "a");
+    example("[a-c]", "b");
+    example("[a-c]", "c");
+    example("[-a]", "a");
+    example("[-a]", "-");
+    example("[a-]", "a");
+    example("[a-]", "-");
   });
 });

@@ -36,6 +36,71 @@ exports[`Parser > input '(a+)|(b+)' 1`] = `
 ]
 `;
 
+exports[`Parser > input '[-ab]' 1`] = `
+[
+  {
+    "type": "alternative",
+    "nodes": [
+      {
+        "type": "word",
+        "character": "-"
+      },
+      {
+        "type": "word",
+        "character": "a"
+      },
+      {
+        "type": "word",
+        "character": "b"
+      }
+    ]
+  }
+]
+`;
+
+exports[`Parser > input '[a-b]' 1`] = `
+[
+  {
+    "type": "alternative",
+    "nodes": [
+      {
+        "type": "range",
+        "left": {
+          "type": "word",
+          "character": "a"
+        },
+        "right": {
+          "type": "word",
+          "character": "b"
+        }
+      }
+    ]
+  }
+]
+`;
+
+exports[`Parser > input '[ab-]' 1`] = `
+[
+  {
+    "type": "alternative",
+    "nodes": [
+      {
+        "type": "word",
+        "character": "a"
+      },
+      {
+        "type": "word",
+        "character": "b"
+      },
+      {
+        "type": "word",
+        "character": "-"
+      }
+    ]
+  }
+]
+`;
+
 exports[`Parser > input 'a(?:b)c' 1`] = `
 [
   {

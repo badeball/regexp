@@ -1,3 +1,4 @@
+import { assert } from "../helpers.ts";
 import type { Token as LexerToken } from "../lexer/index.ts";
 
 export interface Quantifier {
@@ -31,12 +32,24 @@ export interface Union {
   right: Node;
 }
 
+export interface Range {
+  type: "range";
+  left: Word;
+  right: Word;
+}
+
+export interface Alternative {
+  type: "alternative";
+  nodes: (Word | Range)[];
+}
+
 export type Node =
   | Quantifier
   | Word
   | NonCapturingGroup
   | CapturingGroup
-  | Union;
+  | Union
+  | Alternative;
 
 export type NodeList = Node[];
 
@@ -188,6 +201,74 @@ export class Parser {
           left: expression[expression.length - 1],
           right: (parseToken(next), expression.pop()!),
         };
+      } else if (token.value === "[") {
+        let isRange = false;
+        let next: LexerToken;
+        const alternative: Alternative = {
+          type: "alternative",
+          nodes: [],
+        };
+
+        expression.push(alternative);
+
+        while ((next = expectToken(this.lexer.next())).value !== "]") {
+          if (/\w/.test(next.value)) {
+            if (isRange) {
+              const range = alternative.nodes[alternative.nodes.length - 1];
+
+              assert(range.type === "range", "Expected to find a range");
+
+              range.right = {
+                type: "word",
+                character: next.value,
+              };
+
+              isRange = false;
+            } else {
+              alternative.nodes.push({
+                type: "word",
+                character: next.value,
+              });
+            }
+          } else if (next.value === "-") {
+            if (alternative.nodes.length === 0) {
+              alternative.nodes.push({
+                type: "word",
+                character: "-",
+              });
+            } else {
+              isRange = true;
+
+              const left = alternative.nodes.pop()!;
+
+              assert(
+                left.type === "word",
+                "Expected right of range to be word",
+              );
+
+              alternative.nodes.push({
+                type: "range",
+                left,
+                right: null as unknown as Word,
+              });
+            }
+          } else {
+            throw new Error("Urecognized token " + next.value);
+          }
+        }
+
+        if (isRange) {
+          const range = alternative.nodes.pop()!;
+
+          assert(range.type === "range", "Expected to find a range");
+
+          alternative.nodes.push(range.left);
+
+          alternative.nodes.push({
+            type: "word",
+            character: "-",
+          });
+        }
       } else {
         throw new Error("Urecognized token " + token.value);
       }
