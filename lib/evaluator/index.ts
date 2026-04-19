@@ -231,7 +231,7 @@ export function consumeUsingState(
         return combineResults(
           match,
           consumeUsingState(
-            input.slice(length),
+            input,
             rest,
             states,
             position + length,
@@ -250,7 +250,7 @@ export function consumeUsingState(
         return combineResults(
           match,
           consumeUsingState(
-            input.slice(length),
+            input,
             rest,
             states,
             position + length,
@@ -274,7 +274,7 @@ export function consumeUsingState(
         return combineResults(
           match,
           consumeUsingState(
-            input.slice(length),
+            input,
             rest,
             states,
             position + length,
@@ -285,9 +285,9 @@ export function consumeUsingState(
       }
     }
     case "word": {
-      if (input[0] === node.character) {
+      if (input[position] === node.character) {
         const consumedRest = consumeUsingState(
-          input.slice(1),
+          input,
           rest,
           states,
           position + 1,
@@ -298,7 +298,7 @@ export function consumeUsingState(
 
         return combineResults(
           {
-            match: input[0],
+            match: input[position],
             groups: [],
           },
           consumedRest,
@@ -312,13 +312,13 @@ export function consumeUsingState(
         node.nodes.some((alternative) => {
           switch (alternative.type) {
             case "word":
-              const match = input[0] === alternative.character;
+              const match = input[position] === alternative.character;
 
               return node.negated ? !match : match;
             case "range":
               const start = alternative.left.character.charCodeAt(0);
               const end = alternative.right.character.charCodeAt(0);
-              const actual = input.charCodeAt(0);
+              const actual = input.charCodeAt(position);
               const inside = actual >= start && actual <= end;
 
               return node.negated ? !inside : inside;
@@ -328,7 +328,7 @@ export function consumeUsingState(
         })
       ) {
         return {
-          match: input[0],
+          match: input[position],
           groups: [],
         };
       } else {
